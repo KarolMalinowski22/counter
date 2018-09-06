@@ -4,10 +4,18 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import sample.util.Counting;
-import sample.util.Password;
+import sample.passwordutil.CheckAndSetPassword;
+import sample.passwordutil.Input;
+import sample.passwordutil.Password;
+import sample.passwordutil.SaveState;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
 
 
 public class Controller {
@@ -23,50 +31,69 @@ public class Controller {
     Button backButton;
     @FXML
     Label label;
+    @FXML
+    ProgressBar pb;
+    CheckAndSetPassword checkAndSetPassword = new CheckAndSetPassword();
 
-    private String passwordExpected;
-    private boolean isPaswordExpectedSet = false;
-    private boolean isPaswordHiddenSet = false;
-    private Password password = new Password("", "");
 
 
     public void initialize() {
-
+        if(Initializing.checkForSave(checkAndSetPassword)){
+            label.setText("Password:");
+            checkButton.setText("Check");
+        }
         Initializing.createKeyboard(keyboard);
         for (int i = 0; i < keyboard.getChildren().size(); i++) {
             Node button = keyboard.getChildren().get(i);
             button.setOnMouseClicked(e -> {
-                Counting.setPasswordGiven(button.getAccessibleText());
-                display.setText(Counting.getPasswordGiven());
+                Input.writePasswordToDisplay(button.getAccessibleText());
+                display.setText(Input.getPasswordGiven());
             });
         }
+        checkAndSetPassword.setController(this);
         checkButton.setOnAction(e -> {
-            if (!isPaswordHiddenSet) {
-                if (!isPaswordExpectedSet){
-                    passwordExpected = Counting.getPasswordGiven();
-                    isPaswordExpectedSet = true;
-                    Counting.reset();
-                    display.setText(Counting.getPasswordGiven());
-                    label.setText("Set password secured:");
-                }else{
-                    password = new Password(Counting.getPasswordGiven(), passwordExpected);
-                    isPaswordHiddenSet = true;
-                    checkButton.setText("Check");
-                    Counting.reset();
-                    display.setText(Counting.getPasswordGiven());
-                    label.setText("Password:");
-                }
-            }else if (password.checkPassword(Counting.getPasswordGiven())) {
-                display.setText(password.getPasswordToAccess());
-            }
+            checkAndSetPassword.checkOrSetPassword();
         });
         resetButton.setOnAction(e -> {
-            Counting.reset();
-            display.setText(Counting.getPasswordGiven());
+            if(keyboard.isDisabled()){
+                disableButtons(false);
+            }
+            //if super password has been given
+            if(Input.reset()){
+                label.setText("Set password expected");
+                checkButton.setText("Set");
+            }
+            display.setText(Input.getPasswordGiven());
         });
         backButton.setOnAction(e -> {
-            Counting.back();
-            display.setText(Counting.getPasswordGiven());
+            Input.back();
+            display.setText(Input.getPasswordGiven());
         });
+    }
+    public void setTextOnCheckButton(String text){
+        checkButton.setText(text);
+    }
+    public void setTextOnDisplay(String text){
+        display.setText(text);
+    }
+    public void setTextOnLabel(String text){
+        label.setText(text);
+    }
+
+    public TextField getDisplay() {
+        return display;
+    }
+    public void disableButtons(boolean disable){
+        keyboard.setDisable(disable);
+        checkButton.setDisable(disable);
+        resetButton.setDisable(disable);
+        backButton.setDisable(disable);
+    }
+    public void disableReset(boolean disable){
+        resetButton.setDisable(disable);
+    }
+
+    public ProgressBar getPb() {
+        return pb;
     }
 }

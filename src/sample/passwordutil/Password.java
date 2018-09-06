@@ -1,11 +1,15 @@
-package sample.util;
+package sample.passwordutil;
 
-public class Password {
+import java.io.Serializable;
+
+public class Password  implements Serializable {
     private final String passwordExpected;
     private final String passwordToAccess;
-    public Password(String passwordToAccess, String passwordExpected){
+    private final int cooldown;
+    public Password(String passwordToAccess, String passwordExpected, int cooldown){
         this.passwordToAccess = passwordToAccess;
         this.passwordExpected = passwordExpected;
+        this.cooldown = cooldown;
     }
     public boolean checkPassword(String passwordGiven){
         if(passwordExpected.equals(passwordGiven)){
@@ -14,7 +18,9 @@ public class Password {
         return false;
     }
 
-
+    public int getCooldown() {
+        return cooldown;
+    }
 
     public String getPasswordToAccess() {
         return passwordToAccess;
